@@ -136,7 +136,7 @@ class Yuque_Wordpress_Public {
 	 */
 	public function saveLog( string $text = '', string $json =''): bool {
 		global $wpdb;
-		$row = $wpdb->insert( $wpdb->prefix . YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION . "_log", [
+		$row = $wpdb->insert( $wpdb->prefix . $this->yuque_wordpress . "_log", [
 			'log_detail' => $text,
 			'yuque_json' => $json,
 		] );
