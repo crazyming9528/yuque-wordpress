@@ -36,6 +36,7 @@ if ( ! defined( 'WPINC' ) ) {
  * Rename this for your plugin and update it as you release new versions.
  */
 define( 'YUQUE_WORDPRESS_VERSION', '1.0.0' );
+define( 'YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION', 'yuque_wordpress_plugin' );
 
 /**
  * The code that runs during plugin activation.
@@ -43,7 +44,7 @@ define( 'YUQUE_WORDPRESS_VERSION', '1.0.0' );
  */
 function activate_yuque_wordpress() {
 	require_once plugin_dir_path( __FILE__ ) . 'includes/class-yuque-wordpress-activator.php';
-	Yuque_Wordpress_Activator::activate();
+	Yuque_Wordpress_Activator::activate(YUQUE_WORDPRESS_VERSION);
 }
 
 /**

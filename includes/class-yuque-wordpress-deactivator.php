@@ -31,6 +31,11 @@ class Yuque_Wordpress_Deactivator {
 	 */
 	public static function deactivate() {
 
+		self::deletePluginVersion();
+
+	}
+	private  static  function deletePluginVersion(){
+		delete_option('yuque_wordpress_version');
 	}
 
 }

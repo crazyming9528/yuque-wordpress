@@ -72,7 +72,8 @@ class Yuque_Wordpress {
 		} else {
 			$this->version = '1.0.0';
 		}
-		$this->yuque_wordpress = 'yuque-wordpress';
+		$this->yuque_wordpress = YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION;
+
 
 		$this->load_dependencies();
 		$this->set_locale();
@@ -98,7 +99,6 @@ class Yuque_Wordpress {
 	 * @access   private
 	 */
 	private function load_dependencies() {
-
 		/**
 		 * The class responsible for orchestrating the actions and filters of the
 		 * core plugin.
@@ -111,6 +111,7 @@ class Yuque_Wordpress {
 		 */
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-yuque-wordpress-i18n.php';
 
+
 		/**
 		 * The class responsible for defining all actions that occur in the admin area.
 		 */
@@ -121,6 +122,9 @@ class Yuque_Wordpress {
 		 * side of the site.
 		 */
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'public/class-yuque-wordpress-public.php';
+
+
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-yuque-wordpress-request.php';
 
 		$this->loader = new Yuque_Wordpress_Loader();
 
@@ -167,11 +171,16 @@ class Yuque_Wordpress {
 	 * @access   private
 	 */
 	private function define_public_hooks() {
-
 		$plugin_public = new Yuque_Wordpress_Public( $this->get_yuque_wordpress(), $this->get_version() );
-
 		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_styles' );
 		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_scripts' );
+		$this->loader->add_action( 'the_content', $plugin_public, 'generateYuqueTips' );
+
+		// 注册webhook回调请求地址 http://xxx.com/wp-admin/admin-ajax.php?action=yuque_wordpress_webhook
+		$this->loader->add_action('wp_ajax_nopriv_yuque_wordpress_webhook',$plugin_public,'pull_posts');
+
+		// 登录用户也可调  测试用
+		$this->loader->add_action('wp_ajax_nopriv_yuque_wordpress_webhook',$plugin_public,'pull_posts');
 
 	}
 
