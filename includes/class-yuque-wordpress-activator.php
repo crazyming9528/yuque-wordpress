@@ -37,6 +37,9 @@ class Yuque_Wordpress_Activator {
 
 	}
 
+
+
+
 	/**
 	 * 创建 wp post 和 yuque post 的映射表
 	 */

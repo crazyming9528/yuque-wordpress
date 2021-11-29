@@ -100,4 +100,17 @@ class Yuque_Wordpress_Admin {
 
 	}
 
+	/**
+	 * @return string
+	 */
+	public function register_plugin_menu():void {
+		add_menu_page('Yuque WordPress','Yuque','administrator','yuque_wordpress_plugin',array($this,'custom_menu_page'),plugin_dir_url(dirname(__FILE__)).'assets/yq.svg');
+	}
+
+	public function custom_menu_page(){
+		require_once(plugin_dir_path( __FILE__ )."/web/index.html");
+//		echo "Admin Page Test--".plugin_dir_url(dirname(__FILE__)).'assets/2.png';
+	}
+
+
 }
