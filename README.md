@@ -1,7 +1,8 @@
 
 ### yuque-WordPress 同步插件(开发中)
 
-#### 想使用最好用的编辑器又想拥有一个自己的网站
+#### 语雀webhook推送地址:
+站点域名/wp-admin/admin-ajax.php?action=yuque_wordpress_webhook&token=xxx
 
 
 #### 预计实现功能
