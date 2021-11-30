@@ -145,23 +145,116 @@ class Yuque_Wordpress_Public {
 
 	}
 
-	public function createOrUpdateWpPost( $doc_data ) {
-		$this->saveLog('开始创建或更新--:'.json_encode($doc_data));
+
+	private function parseXmlInHtml(string $htmlStr ='')   {
+		$xml_array = array();
+		$yuque_wp_xml = NULL;
+
+		try
+		{
+
+			$html_doc = new DOMDocument();
+			$html_doc->loadHTML(mb_convert_encoding($htmlStr,'HTML-ENTITIES','UTF-8') );
+			$html_doc->normalizeDocument();
+			$pres= $html_doc->getElementsByTagName('pre');
+			foreach ($pres as $pre){
+				if ($pre->hasAttributes()){
+					$is_xml = $pre->getAttribute('data-language') === 'xml';
+					if ($is_xml){
+						$xml_text= $pre->nodeValue;//nodeValue 获取 dom中文本
+						$this->saveLog('$xml_text',$xml_text);
+						$has_plugin_identification = strpos($xml_text,'<yuque_wordpress_plugin>') !== FALSE && strpos($xml_text,'</yuque_wordpress_plugin>') !== FALSE;
+						$this->saveLog('$has_plugin_identification',$has_plugin_identification);
+						if ($has_plugin_identification !== FALSE){
+							array_push($xml_array,$xml_text);
+						}
+					}
+				}
+			}
+
+			if (!empty($xml_array)){
+				$this->saveLog('xml数组不为空');
+				$yuque_wp_xml = simplexml_load_string($xml_array[0]);
+				$this->saveLog('womale~~~',json_encode($yuque_wp_xml));
+			}
+
+		}
+			// 捕获异常
+		catch(Exception $e)
+		{
+			$this->saveLog('解析xml发生错误',json_encode($e));
+
+		} finally {
+			$this->saveLog('输出$yuque_wp_xml',json_encode($yuque_wp_xml));
+			return $yuque_wp_xml;
+		}
+
+
+
+
+	}
+
+	public function createOrUpdateWpPost( $doc_data, $xml_obj_data = null ) {
+
+		$post_status ='publish';//文章状态
+		$post_tag = array(); // 文章标签
+		$post_category = array();//文章分类
+		if ($doc_data['public'] === 0){
+			// 语雀私密文档
+			$post_status ='private';
+		}else if ($doc_data['public'] === 1){
+			// 语雀公开文档
+			$post_status = $doc_data['status'] === 1 ? 'publish' : 'draft';
+		}
+
+		if (!is_null($xml_obj_data)){
+			if ($xml_obj_data->category){
+				if (is_object($xml_obj_data->category)){
+					$temp = $this->object_array($xml_obj_data->category);
+					$this->saveLog('$xml_obj_data->category 多个',json_encode($temp));
+					//					$post_tag = array_merge($post_tag,$xml_obj_data->tag);
+					$post_category = $temp;
+				}else{
+					$this->saveLog('$xml_obj_data->category 单个',$xml_obj_data->category);
+					array_push($post_category,$xml_obj_data->category);
+				}
+
+			}
+			if ($xml_obj_data->tag){
+				if (is_object($xml_obj_data->tag)){
+					$temp = $this->object_array($xml_obj_data->tag);
+					$this->saveLog('$xml_obj_data->tag 多个',json_encode($temp));
+//					$post_tag = array_merge($post_tag,$xml_obj_data->tag);
+					$post_tag = $temp;
+				}else{
+					$this->saveLog('$xml_obj_data->tag 单个',$xml_obj_data->tag);
+					array_push($post_tag,$xml_obj_data->tag);
+
+				}
+
+			}
+
+
+		}
+
+
 		global $wpdb;
 		$sql    = "select count(*) from " . $wpdb->prefix . $this->yuque_wordpress . "_post_map where yuque_post_id = " . $doc_data['id'];
 		$this->saveLog('sql: '.$sql);
 		$sqlRes = $wpdb->get_var( $sql );
-		$this->saveLog(' 执行结果 '.$sqlRes);
+
 		if ( $sqlRes == 0 ) {
 
 			$post_id = wp_insert_post( [
 					//			'post_content'=> $raw_data['data']['title'],
 					'post_content'          => $doc_data['body_html'],
 					//正文html
-					'post_content_filtered' => $doc_data['body_draft'],
+					'post_content_filtered' => $doc_data['body'],
 					// 正文 markdown
 					'post_title'            => $doc_data['title'],
-					'post_status'           => 'publish',
+					'post_status'           => $post_status,
+					'post_category'         => $post_category,
+					'tags_input'            => $post_tag,
 				]
 			);
 
@@ -184,10 +277,12 @@ class Yuque_Wordpress_Public {
 				//
 				'post_content'          => $doc_data['body_html'],
 				//正文html
-				'post_content_filtered' => $doc_data['body_draft'],
+				'post_content_filtered' => $doc_data['body'],
 				// 正文 markdown
 				'post_title'            => $doc_data['title'],
-				'post_status'           => 'publish',
+				'post_status'           => $post_status,
+				'post_category'         => $post_category,
+				'tags_input'            => $post_tag,
 			] );
 			$this->saveLog( $post_id ? "从语雀更新文章成功," . $post_id.":".$doc_data['title'] : '从语雀更新文章失败' );
 		}
@@ -219,9 +314,24 @@ class Yuque_Wordpress_Public {
 			$doc_data  = $request->getDocDetail($namespace,$resData->data->slug);
 			if ( $doc_data ) {
 				$this->saveLog('获取文章信息成功');
-				$this->createOrUpdateWpPost( $doc_data );
+				$xml_data = $this->parseXmlInHtml($doc_data['body_html']);
+
+				$this->createOrUpdateWpPost( $doc_data,$xml_data );
+
 			}
 		}
+	}
+
+// 对象转数组
+	  private function object_array($array) {
+		if(is_object($array)) {
+			$array = (array)$array;
+		} if(is_array($array)) {
+			foreach($array as $key=>$value) {
+				$array[$key] = $this->object_array($value);
+			}
+		}
+		return $array;
 	}
 
 }
