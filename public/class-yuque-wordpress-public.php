@@ -114,8 +114,11 @@ class Yuque_Wordpress_Public
      */
     public function generateYuqueTips($content): string
     {
-        $content .= '<div style="background-color: #bfea81;color: white;text-align: center"><img src="https://gw.alipayobjects.com/mdn/prod_resou/afts/img/A*OwZWQ68zSTMAAAAAAAAAAABkARQnAQ" alt="">本文章同步自语雀</div>';
-
+        $is_yuque = strpos($content,'data-yuque_wordpress_plugin-version');
+        if ($is_yuque){
+            $img = plugin_dir_url(dirname(__FILE__)).'assets/yq_logo_50x50.svg';
+            $content .= '<div style="text-align: center;background-color: #f6ffe9cf;padding: 2px"><img style="vertical-align: middle" src="'.$img.'" alt=""><span style="vertical-align: middle;font-size: 13px;margin-left: 8px;color: grey">本文通过  <a href="https://github.com/crazyming9528/yuque-wordpress" rel="nofollow" target="_blank">YUQUE WORDPRESS</a> 同步自语雀云端知识库</span></div>';
+        }
         return $content;
     }
 
@@ -164,7 +167,6 @@ class Yuque_Wordpress_Public
             $html_doc->loadHTML(mb_convert_encoding($htmlStr, 'HTML-ENTITIES', 'UTF-8'));
             $html_doc->normalizeDocument();
             $pres = $html_doc->getElementsByTagName('pre');
-
 			foreach ($pres as $pre){
 				if ($pre->hasAttributes()){
 					$is_xml = $pre->getAttribute('data-language') === 'xml';
@@ -179,9 +181,12 @@ class Yuque_Wordpress_Public
 				}
 			}
 
+            $node = $html_doc->createElement("div");
+            $new_node = $html_doc->appendChild($node);
+            $new_node->setAttribute("data-". $this->yuque_wordpress.'-version', $this->version);//  添加标记
+            $new_html =  $html_doc->saveHTML();
             if (!empty($xml_array)) {
                 $yuque_wp_xml = simplexml_load_string($xml_array[0]);
-                $new_html =  $html_doc->saveHTML();
             }
 
         } // 捕获异常
