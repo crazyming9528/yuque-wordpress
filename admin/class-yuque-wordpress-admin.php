@@ -108,7 +108,9 @@ class Yuque_Wordpress_Admin {
 	}
 
 	public function custom_menu_page(){
-		require_once(plugin_dir_path( __FILE__ )."/web/index.html");
+
+
+	require_once(plugin_dir_path( __FILE__ )."/vue/index.html");
 //		echo "Admin Page Test--".plugin_dir_url(dirname(__FILE__)).'assets/2.png';
 	}
 
