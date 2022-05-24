@@ -20,33 +20,34 @@
  * @subpackage Yuque_Wordpress/includes
  * @author     Your Name <email@example.com>
  */
-class Yuque_Wordpress_Activator {
+class Yuque_Wordpress_Activator
+{
 
-	/**
-	 * Short Description. (use period)
-	 *
-	 * Long Description.
-	 *
-	 * @since    1.0.0
-	 */
-	public static function activate($version) {
+    /**
+     * Short Description. (use period)
+     *
+     * Long Description.
+     *
+     * @since    1.0.0
+     */
+    public static function activate($version)
+    {
 
-		self::createPostMapDataTable();
-		self::createLogDataTable();
-		self::updateOptions($version);
+        self::createPostMapDataTable();
+        self::createLogDataTable();
+        self::updateOptions($version);
 
-	}
-
-
+    }
 
 
-	/**
-	 * 创建 wp post 和 yuque post 的映射表
-	 */
-	private static function  createPostMapDataTable(){
-		global $wpdb;
-		$tableName=$wpdb->prefix.YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION.'_post_map';
-		$sql = "CREATE TABLE IF NOT EXISTS ".$tableName." (
+    /**
+     * 创建 wp post 和 yuque post 的映射表
+     */
+    private static function createPostMapDataTable()
+    {
+        global $wpdb;
+        $tableName = $wpdb->prefix . YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION . '_post_map';
+        $sql = "CREATE TABLE IF NOT EXISTS " . $tableName . " (
 		id bigint(9) NOT NULL AUTO_INCREMENT,
 		post_id bigint(20) NOT NULL,
 		yuque_post_id bigint(20) NOT NULL,
@@ -56,18 +57,19 @@ class Yuque_Wordpress_Activator {
 		PRIMARY KEY  (id)
 		)";
 
-		require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
-		dbDelta($sql);
+        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+        dbDelta($sql);
 
-	}
+    }
 
-	/**
-	 * 创建日志表
-	 */
-	private static function  createLogDataTable(){
-		global $wpdb;
-		$tableName=$wpdb->prefix.YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION.'_log';
-		$sql = "CREATE TABLE IF NOT EXISTS ".$tableName." (
+    /**
+     * 创建日志表
+     */
+    private static function createLogDataTable()
+    {
+        global $wpdb;
+        $tableName = $wpdb->prefix . YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION . '_log';
+        $sql = "CREATE TABLE IF NOT EXISTS " . $tableName . " (
 		id bigint(9) NOT NULL AUTO_INCREMENT,
 		log_detail varchar(200),
 		yuque_json longtext,
@@ -75,25 +77,35 @@ class Yuque_Wordpress_Activator {
 		PRIMARY KEY  (id)
 		)";
 
-		require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
-		dbDelta($sql);
+        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+        dbDelta($sql);
 
-	}
+    }
 
-	/**
-	 * 更新或创建插件版本号
-	 * @param $version
-	 */
-	private static function  updateOptions($version){
-		// update_option()方法，在options表里如果不存在更新字段，则会创建该字段,存在则更新该字段
-		update_option(YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION.'_version', $version);
+    /**
+     * 更新或创建插件版本号
+     * @param $version
+     */
+    private static function updateOptions($version)
+    {
+        // update_option()方法，在options表里如果不存在更新字段，则会创建该字段,存在则更新该字段
+        update_option(YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION . '_version', $version);
 
-		if (!get_option(YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION."_token")){
-			add_option(YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION.'_token');
-		};
-		if (!get_option(YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION."_access_token")){
-			add_option(YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION.'_access_token');
-		};
-	}
+        if (!get_option(YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION . "_token")) {
+            add_option(YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION . '_token');
+        };
+        if (!get_option(YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION . "_access_token")) {
+            add_option(YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION . '_access_token');
+        };
+        if (!get_option(YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION . "_author")) {
+            add_option(YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION . '_author');
+        };
+        if (!get_option(YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION . "_parse_xml")) {
+            add_option(YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION . '_parse_xml');
+        };
+        if (!get_option(YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION . "_local_image")) {
+            add_option(YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION . '_local_image');
+        };
+    }
 
 }

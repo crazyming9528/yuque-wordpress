@@ -37,7 +37,7 @@ if ( ! defined( 'WPINC' ) ) {
  */
 define( 'YUQUE_WORDPRESS_VERSION', '1.0.0' );
 define( 'YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION', 'yuque_wordpress_plugin' );
-
+define('AJAX_URL', admin_url('admin-ajax.php'));
 /**
  * The code that runs during plugin activation.
  * This action is documented in includes/class-yuque-wordpress-activator.php

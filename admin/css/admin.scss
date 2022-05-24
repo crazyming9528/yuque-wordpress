@@ -1,0 +1,107 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: #f3f3f3;
+}
+
+.header {
+  background-color: #61c37a;
+  padding: 15px;
+  box-sizing: border-box;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  .title{
+    color: white;
+    font-size: 26px;
+  }
+
+
+}
+
+.hello{
+
+}
+.webhook{
+  font-size: 18px;
+  font-weight: bold;
+  margin: 30px 0;
+}
+
+.main {
+  box-sizing: border-box;
+  padding: 20px;
+  //width: 960px;
+  //margin: 15px auto;
+  background-color: white;
+  display: flex;
+  flex-wrap: wrap;
+  position: relative;
+  overflow: hidden;
+
+  .tab-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+    .tab {
+      box-sizing: border-box;
+      width: 100px;
+      cursor: pointer;
+      height: 45px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all .3s;
+      color: #61c37a;
+      border-top:2px solid #61c37a;
+      .icon{
+        margin-right:8px;
+      }
+      &.active{
+        background-color: #f3f3f3;
+        border-top:4px solid #61c37a;
+      }
+      &:hover{
+        background-color: #61c37a;
+        color: white;
+      }
+
+    }
+
+  }
+
+  .tab-content{
+    width: 100%;
+    flex: 1;
+    background-color: #f3f3f3;
+    padding: 25px 35px  ;
+
+    .form{
+      .tips{
+        color: grey;
+        font-size: 12px;
+        margin-left: 15px;
+      }
+      .form-item{
+        display: flex;
+        &:not(:last-child){
+          margin-bottom: 30px;
+        }
+        .label{
+          min-width: 200px;
+        }
+      }
+    }
+    .button-wrapper{
+      margin-top: 25px;
+    }
+  }
+
+}
+
+.footer {
+
+}
