@@ -31,7 +31,7 @@
                     <div class="label">插件 Token</div>
                     <div class="content">
                         <el-input
-                                placeholder="建议设置token，防止恶意调用webhook"
+                                placeholder="建议设置token，防止webhook被恶意调用。"
                                 style="width: 400px"
                                 v-model="form.pluginToken"
                                 clearable>
@@ -44,10 +44,11 @@
                     <div class="content">
                         <el-input
                                 style="width: 400px"
-                                placeholder="前往语雀官网获取access toekn"
+                                placeholder="语雀access token"
                                 v-model="form.accessToken"
                                 clearable>
                         </el-input>
+                        <span class="tips"><a href="https://www.yuque.com/settings/tokens" target="_blank">前往语雀获取 access token</a></span>
                     </div>
                 </div>
 
