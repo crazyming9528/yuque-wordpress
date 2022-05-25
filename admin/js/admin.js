@@ -101,7 +101,7 @@ var vm = new Vue({
                     // console.log(form);
                     delete data.host;
                     _this.form = Object.assign(_this.form, data);
-                    _this.webhook = res.data.data.host+'admin-ajax.php?action=yuque_wordpress_webhook&token='+res.data.data.pluginToken;
+                    _this.webhook = res.data.data.host+'wp-admin/admin-ajax.php?action=yuque_wordpress_webhook&token='+res.data.data.pluginToken;
                 }
             }).finally(function () {
                 _this.loading = false;

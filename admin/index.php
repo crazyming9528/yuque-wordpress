@@ -71,6 +71,7 @@
                                 active-color="#13ce66"
                                 inactive-color="#838383">
                         </el-switch>
+                        <span class="tips">解析xml设置关键词、描述、分类、标签等信息</span>
                     </div>
                 </div>
 
@@ -83,6 +84,7 @@
                                 active-color="#13ce66"
                                 inactive-color="#838383">
                         </el-switch>
+                        <span class="tips">语雀做了图片防盗链，如果不想本地化，<a href="https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/meta/name">设置meta标签referrer为no-referrer</a>即可白嫖图片，但百度统计等可能失效。</span>
                     </div>
                 </div>
 

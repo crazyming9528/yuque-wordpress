@@ -204,7 +204,64 @@ class Yuque_Wordpress_Public
 
     }
 
-    public function createOrUpdateWpPost($doc_data, $xml_obj_data = null, $author)
+    /**
+     * @return string
+     */
+    public function localImage($post_id, $content): string
+    {
+        $preg = preg_match_all('/<img.*?src="(.*?)"/', stripslashes($content), $matches);
+        if ($preg) {
+            $i = 1;
+            foreach ($matches[1] as $image_url) {
+                if (empty($image_url)) continue;
+                $pos = strpos($image_url, get_bloginfo('url'));
+                if ($pos === false) {
+                    $file = file_get_contents($image_url);
+                    $filename = basename($image_url);
+                    $res = wp_upload_bits($filename, '', $file);
+                    $dirs = wp_upload_dir();
+                    $filetype = wp_check_filetype($filename);
+                    $attachment = array(
+                        'guid' => $dirs['baseurl'] . '/' . $filename,
+                        'post_mime_type' => $filetype['type'],
+                        'post_title' => preg_replace('/\.[^.]+$/', '', $filename),
+                        'post_content' => '',
+                        'post_status' => 'inherit'
+                    );
+                    $attach_id = wp_insert_attachment($attachment, $file, $post_id);
+                    $attach_data = wp_generate_attachment_metadata($attach_id, $file);
+                    //wp_generate_attachment_metadata
+                    wp_update_attachment_metadata($attach_id, $attach_data);
+                    //if($i==1 ){
+                    //set_post_thumbnail( $post_id, $attach_id );
+                    //}
+                    $replace = $res['url'];
+                    $content = str_replace($image_url, $replace, $content);
+                }
+                $i++;
+            }
+        }
+        return $content;
+    }
+
+    /**
+     * @return string
+     */
+    public function updatePostForLocalImage($post_id, $content): string
+    {
+        $this->saveLog('本地化图片开始');
+        $post_id2 = wp_update_post([
+            'ID' => $post_id,
+            //
+            'post_content' => $this->localImage($post_id, $content),
+            //正文html
+//            'post_content_filtered' => $doc_data['body'], todo 这里同样需要处理图片
+
+        ]);
+        $this->saveLog($post_id2 ? "本地化成功 " : '本地化失败');
+    }
+
+    public function createOrUpdateWpPost($doc_data, $xml_obj_data = null, $author = '', $isLocalImage = false, $isParseXml = false)
     {
 
         $post_status = 'publish';//文章状态
@@ -218,7 +275,7 @@ class Yuque_Wordpress_Public
             $post_status = $doc_data['status'] === 1 ? 'publish' : 'draft';
         }
 
-        if (!is_null($xml_obj_data)) {
+        if (!is_null($xml_obj_data) && $isParseXml) {
             if ($xml_obj_data->category) {
                 if (is_object($xml_obj_data->category)) {
                     $temp_Array = $this->object_array($xml_obj_data->category);
@@ -284,6 +341,7 @@ class Yuque_Wordpress_Public
                 ]
             );
 
+
             if ($post_id) {
                 $wpdb->insert($wpdb->prefix . $this->yuque_wordpress . "_post_map", [
                     'post_id' => $post_id,
@@ -291,6 +349,10 @@ class Yuque_Wordpress_Public
                     'yuque_post_url' => '2',
                 ]);
                 $this->saveLog('从语雀新建文章成功,' . $post_id . ":" . $doc_data['title']);
+
+                if ($isLocalImage){
+                    $this->updatePostForLocalImage($post_id, $doc_data['body_html']);
+                }
             } else {
                 $this->saveLog('从语雀新建文章失败');
             }
@@ -311,6 +373,10 @@ class Yuque_Wordpress_Public
                 'tags_input' => $post_tag,
             ]);
             $this->saveLog($post_id ? "从语雀更新文章成功," . $post_id . ":" . $doc_data['title'] : '从语雀更新文章失败');
+            if ($post_id && $isLocalImage){
+                $this->updatePostForLocalImage($post_id, $doc_data['body_html']);
+            }
+
         }
 
     }
@@ -335,7 +401,6 @@ class Yuque_Wordpress_Public
 
         $resData = json_decode($raw_data);
         $user_data = $request->getUserInfo();
-        $author = get_option($this->yuque_wordpress . "_author");
         if ($user_data) {
             $namespace = $user_data['login'] . '/' . $resData->data->book->slug;
             $doc_data = $request->getDocDetail($namespace, $resData->data->slug);
@@ -343,7 +408,10 @@ class Yuque_Wordpress_Public
                 $this->saveLog('获取文章信息成功');
                 $parse_data = $this->parseXmlInHtml($doc_data['body_html']);
                 $doc_data['body_html'] = $parse_data['new_html']; // 使用经过解析处理的html
-                $this->createOrUpdateWpPost($doc_data, $parse_data['yuque_wp_xml'], $author);
+                $author = get_option($this->yuque_wordpress . "_author");
+                $isLocalImage = boolval(get_option($this->yuque_wordpress . "_local_image"));
+                $isParseXml = boolval(get_option($this->yuque_wordpress . "_parse_xml"));
+                $this->createOrUpdateWpPost($doc_data, $parse_data['yuque_wp_xml'], $author, $isLocalImage, $isParseXml);
 
             }
         }
