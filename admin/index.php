@@ -36,7 +36,7 @@
                                 v-model="form.pluginToken"
                                 clearable>
                         </el-input>
-                        <span class="tips">修改token后请注意webhook地址的变化</span>
+                        <span class="tips">当你的webhook地址被泄漏，你可以修改token来解决恶意调用。修改token后请注意webhook地址的变化</span>
                     </div>
                 </div>
                 <div class="form-item">
