@@ -26,8 +26,8 @@
  */
 
 // If this file is called directly, abort.
-if ( ! defined( 'WPINC' ) ) {
-	die;
+if (!defined('WPINC')) {
+    die;
 }
 
 /**
@@ -35,35 +35,45 @@ if ( ! defined( 'WPINC' ) ) {
  * Start at version 1.0.0 and use SemVer - https://semver.org
  * Rename this for your plugin and update it as you release new versions.
  */
-define( 'YUQUE_WORDPRESS_VERSION', '1.0.0' );
-define( 'YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION', 'yuque_wordpress_plugin' );
+define('YUQUE_WORDPRESS_VERSION', '1.0.0');
+define('YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION', 'yuque_wordpress_plugin');
 define('AJAX_URL', admin_url('admin-ajax.php'));
+const DEFAULT_CONFIG = array(
+    "switch" => false,// 开关
+    "plugin_token" => "crazyming.com",//插件token
+    "access_token" => "",//语雀token
+    "author" => "",// 作者id
+    "parse_xml" => false,//是否解析xml
+    "local_image" => true,//是否开启图片本地化
+);
 /**
  * The code that runs during plugin activation.
  * This action is documented in includes/class-yuque-wordpress-activator.php
  */
-function activate_yuque_wordpress() {
-	require_once plugin_dir_path( __FILE__ ) . 'includes/class-yuque-wordpress-activator.php';
-	Yuque_Wordpress_Activator::activate(YUQUE_WORDPRESS_VERSION);
+function activate_yuque_wordpress()
+{
+    require_once plugin_dir_path(__FILE__) . 'includes/class-yuque-wordpress-activator.php';
+    Yuque_Wordpress_Activator::activate(YUQUE_WORDPRESS_VERSION);
 }
 
 /**
  * The code that runs during plugin deactivation.
  * This action is documented in includes/class-yuque-wordpress-deactivator.php
  */
-function deactivate_yuque_wordpress() {
-	require_once plugin_dir_path( __FILE__ ) . 'includes/class-yuque-wordpress-deactivator.php';
-	Yuque_Wordpress_Deactivator::deactivate();
+function deactivate_yuque_wordpress()
+{
+    require_once plugin_dir_path(__FILE__) . 'includes/class-yuque-wordpress-deactivator.php';
+    Yuque_Wordpress_Deactivator::deactivate();
 }
 
-register_activation_hook( __FILE__, 'activate_yuque_wordpress' );
-register_deactivation_hook( __FILE__, 'deactivate_yuque_wordpress' );
+register_activation_hook(__FILE__, 'activate_yuque_wordpress');
+register_deactivation_hook(__FILE__, 'deactivate_yuque_wordpress');
 
 /**
  * The core plugin class that is used to define internationalization,
  * admin-specific hooks, and public-facing site hooks.
  */
-require plugin_dir_path( __FILE__ ) . 'includes/class-yuque-wordpress.php';
+require plugin_dir_path(__FILE__) . 'includes/class-yuque-wordpress.php';
 
 /**
  * Begins execution of the plugin.
@@ -74,10 +84,12 @@ require plugin_dir_path( __FILE__ ) . 'includes/class-yuque-wordpress.php';
  *
  * @since    1.0.0
  */
-function run_yuque_wordpress() {
+function run_yuque_wordpress()
+{
 
-	$plugin = new Yuque_Wordpress();
-	$plugin->run();
+    $plugin = new Yuque_Wordpress();
+    $plugin->run();
 
 }
+
 run_yuque_wordpress();

@@ -91,21 +91,25 @@ class Yuque_Wordpress_Activator
         // update_option()方法，在options表里如果不存在更新字段，则会创建该字段,存在则更新该字段
         update_option(YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION . '_version', $version);
 
-        if (!get_option(YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION . "_token")) {
-            add_option(YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION . '_token');
+        if (!get_option(YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION . "_config")) {
+            add_option(YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION . '_config');
         };
-        if (!get_option(YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION . "_access_token")) {
-            add_option(YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION . '_access_token');
-        };
-        if (!get_option(YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION . "_author")) {
-            add_option(YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION . '_author');
-        };
-        if (!get_option(YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION . "_parse_xml")) {
-            add_option(YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION . '_parse_xml');
-        };
-        if (!get_option(YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION . "_local_image")) {
-            add_option(YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION . '_local_image');
-        };
+
+//        if (!get_option(YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION . "_token")) {
+//            add_option(YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION . '_token');
+//        };
+//        if (!get_option(YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION . "_access_token")) {
+//            add_option(YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION . '_access_token');
+//        };
+//        if (!get_option(YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION . "_author")) {
+//            add_option(YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION . '_author');
+//        };
+//        if (!get_option(YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION . "_parse_xml")) {
+//            add_option(YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION . '_parse_xml');
+//        };
+//        if (!get_option(YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION . "_local_image")) {
+//            add_option(YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION . '_local_image');
+//        };
     }
 
 }

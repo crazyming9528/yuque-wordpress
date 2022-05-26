@@ -58,6 +58,9 @@ class Yuque_Wordpress
      */
     protected $version;
 
+
+    protected $defaultConfig;
+
     /**
      * Define the core functionality of the plugin.
      *
@@ -75,6 +78,9 @@ class Yuque_Wordpress
             $this->version = '1.0.0';
         }
         $this->yuque_wordpress = YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION;
+
+        //默认配置
+        $this->defaultConfig = DEFAULT_CONFIG;
 
 
         $this->load_dependencies();
@@ -128,6 +134,8 @@ class Yuque_Wordpress
 
 
         require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-yuque-wordpress-request.php';
+
+        require_once plugin_dir_path( dirname(__FILE__) ) . 'includes/class-yuque-wordpress-utils.php';
 
         $this->loader = new Yuque_Wordpress_Loader();
 

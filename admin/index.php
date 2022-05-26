@@ -15,6 +15,7 @@
                                                        target="_blank">https://github.com/crazyming9528/yuque-wordpress</a>。
             <p>本插件为 <b>语雀->WordPress</b> 单向同步工具，新建和修改文章请在 <a href="https://www.yuque.com/" target="_blank">语雀</a> 进行操作。
             </p>
+            <p>建议在主题的文章页加入语雀文档CSS：http://editor.yuque.com/ne-editor/lake-content-v1.css</p>
             <div class="webhook" v-if="webhook">webhook：{{webhook}}</div>
         </div>
         <div class="tab-wrapper">
@@ -27,6 +28,17 @@
         </div>
         <div v-loading="loading" class="tab-content config" v-if="currentTab === 'config'">
             <div class="form">
+                <div class="form-item">
+                    <div class="label">开启插件</div>
+                    <div class="content">
+                        <el-switch
+                                v-model="form.switch"
+                                active-color="#13ce66"
+                                inactive-color="#838383">
+                        </el-switch>
+                        <span class="tips">开启插件后才可接收语雀数据</span>
+                    </div>
+                </div>
                 <div class="form-item">
                     <div class="label">插件 Token</div>
                     <div class="content">
@@ -53,10 +65,10 @@
                 </div>
 
                 <div class="form-item">
-                    <div class="label">文章作者用户名</div>
+                    <div class="label">文章作者</div>
                     <div class="content">
                         <el-input
-                                placeholder="将同步的文章分配给指定用户"
+                                placeholder="将同步的文章分配给指定账号"
                                 v-model="form.author"
                                 clearable>
                         </el-input>
@@ -84,7 +96,7 @@
                                 active-color="#13ce66"
                                 inactive-color="#838383">
                         </el-switch>
-                        <span class="tips">语雀做了图片防盗链，如果不想本地化，<a href="https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/meta/name" target="_blank">设置meta标签referrer为no-referrer</a> 即可白嫖图片，但百度统计等可能失效。</span>
+                        <span class="tips">语雀做了图片防盗链，如果不想本地化且让图片正常显示，<a href="https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/meta/name" target="_blank">请设置meta标签referrer为no-referrer</a> ，但百度统计等第三方工具可能失效。</span>
                     </div>
                 </div>
 
@@ -94,7 +106,7 @@
                 <el-button type="primary" @click="save" :loading="submitLoading">保存</el-button>
             </div>
         </div>
-        <div class="tab-content history" v-if="currentTab === 'history'">历史记录已在数据库中记录，界面开发中</div>
+        <div class="tab-content history" v-if="currentTab === 'history'">历史记录界面开发中</div>
     </div>
     <div class="footer"></div>
 </div>

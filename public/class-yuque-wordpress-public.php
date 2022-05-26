@@ -41,6 +41,9 @@ class Yuque_Wordpress_Public
      */
     private $version;
 
+
+    private $config;
+
     /**
      * Initialize the class and set its properties.
      *
@@ -131,8 +134,8 @@ class Yuque_Wordpress_Public
      */
     public function verifyPluginToken(string $token = ''): bool
     {
-        $db_token = get_option($this->yuque_wordpress . "_token");
-        return $token !== '' && $token === $db_token;
+        $dbToken = $this->config['pluginToken'];
+        return $token !== '' && $token === $dbToken;
 
     }
 
@@ -259,11 +262,14 @@ class Yuque_Wordpress_Public
 
         ]);
         $this->saveLog($post_id2 ? "本地化成功 " : '本地化失败');
+        return  true;
     }
 
-    public function createOrUpdateWpPost($doc_data, $xml_obj_data = null, $author = '', $isLocalImage = false, $isParseXml = false)
+    public function createOrUpdateWpPost($doc_data, $xml_obj_data = null)
     {
-
+        $author = $this->config['author'];
+        $isLocalImage =$this->config['localImage'];
+        $isParseXml = $this->config['parseXml'];
         $post_status = 'publish';//文章状态
         $post_tag = array(); // 文章标签
         $post_category = array();//文章分类
@@ -390,8 +396,10 @@ class Yuque_Wordpress_Public
     {
 
 
-        $access_token = get_option($this->yuque_wordpress . "_access_token");
-        $request = new Yuque_Wordpress_Request($this->yuque_wordpress, $this->version, $access_token);
+        $this->config = Yuque_Wordpress_Utils::getConfigData($this->yuque_wordpress."_config");
+        if (!$this->config || !$this->config['switch']) wp_die('插件未开启');
+
+        $request = new Yuque_Wordpress_Request($this->yuque_wordpress, $this->version, $this->config['accessToken']);
         $raw_data = $request->get_raw_data();
         $this->saveLog('接收到数据', $raw_data);
 
@@ -408,10 +416,7 @@ class Yuque_Wordpress_Public
                 $this->saveLog('获取文章信息成功');
                 $parse_data = $this->parseXmlInHtml($doc_data['body_html']);
                 $doc_data['body_html'] = $parse_data['new_html']; // 使用经过解析处理的html
-                $author = get_option($this->yuque_wordpress . "_author");
-                $isLocalImage = boolval(get_option($this->yuque_wordpress . "_local_image"));
-                $isParseXml = boolval(get_option($this->yuque_wordpress . "_parse_xml"));
-                $this->createOrUpdateWpPost($doc_data, $parse_data['yuque_wp_xml'], $author, $isLocalImage, $isParseXml);
+                $this->createOrUpdateWpPost($doc_data, $parse_data['yuque_wp_xml']);
 
             }
         }

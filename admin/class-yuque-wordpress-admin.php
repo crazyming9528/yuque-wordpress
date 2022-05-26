@@ -53,7 +53,6 @@ class Yuque_Wordpress_Admin
 
         $this->yuque_wordpress = $yuque_wordpress;
         $this->version = $version;
-
     }
 
     /**
@@ -138,26 +137,21 @@ class Yuque_Wordpress_Admin
      */
     public function get_config()
     {
-
-        $data = [];
 //        $data['version'] = get_option($this->yuque_wordpress . "_version");
+        $data = [];
         $data['host'] = esc_url(home_url('/'));
-
-
-        $data['pluginToken'] = get_option($this->yuque_wordpress . "_token");
-        $data['accessToken'] = get_option($this->yuque_wordpress . "_access_token");
-        $data['author'] = get_option($this->yuque_wordpress . "_author");
-        $data['parseXml'] = boolval(get_option($this->yuque_wordpress . "_parse_xml"));
-        $data['localImage'] = boolval(get_option($this->yuque_wordpress . "_local_image"));
-        if (!$data['author']) {
+        $config = Yuque_Wordpress_Utils::getConfigData($this->yuque_wordpress . "_config");
+        $config['parseXml'] = boolval($config['parseXml']);
+        $config['localImage'] = boolval($config['localImage']);
+        if (!$config['author']) {
             // 不存在 作者id时  返回当前的用户名
-            $data['author'] = wp_get_current_user()->data->user_login;
+            $config['author'] = wp_get_current_user()->data->user_login;
         } else {
             // 通过id 查出用户名
-            $data['author'] = get_user_by('id', $data['author'])->data->user_login;
+            $config['author'] = get_user_by('id', $config['author'])->data->user_login;
         }
-
-        $this->returnJson($data);
+        $data['config'] = $config;
+        Yuque_Wordpress_Utils::returnJson($data);
     }
 
     public function get_user_id()
@@ -166,23 +160,14 @@ class Yuque_Wordpress_Admin
         if ($username) {
             $data = get_user_by('login', $username);
             if ($data) {
-                $this->returnJson($data->ID);
+                Yuque_Wordpress_Utils::returnJson($data->ID);
             } else {
-                $this->returnJson(false, -1, '查询用户失败');
+                Yuque_Wordpress_Utils::returnJson(false, -1, '查询用户失败');
             }
 
         } else {
-            $this->returnJson(false, -1, '请输入用户名');
+            Yuque_Wordpress_Utils::returnJson(false, -1, '请输入用户名');
         }
-    }
-
-    public function returnJson($data = true, $code = 200, $message = '操作成功')
-    {
-        $res = [];
-        $res['code'] = $code;
-        $res['message'] = $message;
-        $res['data'] = $data;
-        wp_die(json_encode($res));
     }
 
 
@@ -193,12 +178,18 @@ class Yuque_Wordpress_Admin
     {
         $raw_data = $_POST['save'];
         $postData = json_decode(stripslashes($raw_data));
-        update_option(YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION . '_token', $postData->pluginToken);
-        update_option(YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION . '_access_token', $postData->accessToken);
-        update_option(YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION . '_author', $postData->author);
-        update_option(YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION . '_parse_xml', $postData->parseXml);
-        update_option(YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION . '_local_image', $postData->localImage);
-        $this->returnJson();
+        $arrayData = Yuque_Wordpress_Utils::objectToArray($postData);
+        $temp = [];
+        foreach ($arrayData as $key => $val) {
+            $underLineKey = Yuque_Wordpress_Utils::toUnderLine($key);
+            if (in_array($underLineKey, DEFAULT_CONFIG)) {
+
+                $temp[$underLineKey] = $val;
+
+            }
+        }
+        update_option(YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION . '_config', json_encode($temp));
+        Yuque_Wordpress_Utils::returnJson();
     }
 
 

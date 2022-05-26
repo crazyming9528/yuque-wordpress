@@ -7,6 +7,7 @@ var vm = new Vue({
         submitLoading: false,
         webhook: "",
         form: {
+            switch:false,
             pluginToken: "",
             accessToken: "",
             author: "",
@@ -97,11 +98,9 @@ var vm = new Vue({
                 data: data,
             }).then(function (res) {
                 if (res.data.code === 200) {
-                    const data = JSON.parse(JSON.stringify(res.data.data));
-                    // console.log(form);
-                    delete data.host;
-                    _this.form = Object.assign(_this.form, data);
-                    _this.webhook = res.data.data.host+'wp-admin/admin-ajax.php?action=yuque_wordpress_webhook&token='+res.data.data.pluginToken;
+                    const data = res.data.data;
+                    _this.form = Object.assign(_this.form, data.config);
+                    _this.webhook = data.host+'wp-admin/admin-ajax.php?action=yuque_wordpress_webhook&token='+data.config.pluginToken;
                 }
             }).finally(function () {
                 _this.loading = false;
