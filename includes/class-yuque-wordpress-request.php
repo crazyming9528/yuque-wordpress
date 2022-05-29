@@ -72,25 +72,15 @@ public function getJson($url,$header=array()) {
 	 */
 	public function getUserInfo() {
 		$user = $this->getJson('/user');
-		return  $user && $user['data'] ? $user['data'] : FALSE;
+		return  $user && $user['data'] ? ['status'=>true,'data'=>$user['data']] :['status'=>false,'data'=>$user];
 	}
-    public function saveLog(string $text = '', string $json = ''): bool
-    {
-        global $wpdb;
-        $row = $wpdb->insert($wpdb->prefix . $this->yuque_wordpress . "_log", [
-            'log_detail' => $text,
-            'yuque_json' => $json,
-        ]);
 
-        return !!$row;
-
-    }
 
 	public  function  getDocDetail(string $namespace,string $slug){
 		$path  = '/repos/' . $namespace . '/docs/' . $slug;
 		$doc = $this->getJson($path);
-		$this->saveLog('请求语雀文档',json_encode($doc));
-		return  $doc && $doc['data'] ? $doc['data'] : FALSE;
+//		$this->saveLog('请求语雀文档',json_encode($doc));
+        return  $doc && $doc['data'] ? ['status'=>true,'data'=>$doc['data']] :['status'=>false,'data'=>$doc];
 	}
 
 

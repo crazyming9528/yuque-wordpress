@@ -46,6 +46,16 @@ const DEFAULT_CONFIG = array(
     "parse_xml" => false,//是否解析xml
     "local_image" => true,//是否开启图片本地化
 );
+
+const YUQUELOGFIELD = [
+    'step' => "",
+    'log_detail' => "",
+    'webhook_data_json' => "",
+    'user_data_json' => "",
+    'doc_data_json' => "",
+    'title' => "",
+    'trigger_at' => '',
+];
 /**
  * The code that runs during plugin activation.
  * This action is documented in includes/class-yuque-wordpress-activator.php

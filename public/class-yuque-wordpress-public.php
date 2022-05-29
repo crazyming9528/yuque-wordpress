@@ -44,6 +44,9 @@ class Yuque_Wordpress_Public
 
     private $config;
 
+    private $postTitle;
+    private $triggerTime;
+
     /**
      * Initialize the class and set its properties.
      *
@@ -146,13 +149,36 @@ class Yuque_Wordpress_Public
      *
      * @return bool
      */
-    public function saveLog(string $text = '', string $json = ''): bool
+    public function saveLog(string $step, array $updateData = array(), $action = 'update')
     {
+
+
         global $wpdb;
-        $row = $wpdb->insert($wpdb->prefix . $this->yuque_wordpress . "_log", [
-            'log_detail' => $text,
-            'yuque_json' => $json,
-        ]);
+        $row = 0;
+        if ($action === 'create') {
+            $willCreate = [];
+            foreach (YUQUELOGFIELD as $key => $value) {
+                $willCreate[$key] = $value;
+            }
+            $willCreate['trigger_at'] = date('Y-m-d H:i:s', $this->triggerTime);
+            $willCreate['title'] = $updateData["title"];
+//            $willCreate['trigger_at'] = $this->triggerTime;
+            $row = $wpdb->insert($wpdb->prefix . $this->yuque_wordpress . "_log", $willCreate);
+        } else if ($action === 'update') {
+            if ($step) {
+                $wpdb->query($wpdb->prepare("UPDATE " . $wpdb->prefix . $this->yuque_wordpress . "_log" . " SET step = CONCAT(step, '=>" . $step . "') WHERE trigger_at = '%s'", date('Y-m-d H:i:s', $this->triggerTime)));
+            }
+            if (sizeof($updateData) === 0) return false;
+
+            $willUpdate = [];
+            foreach ($updateData as $key => $value) {
+                if (array_key_exists($key, YUQUELOGFIELD)) {
+                    $willUpdate[$key] = $value;
+                }
+            }
+            $row = $wpdb->update($wpdb->prefix . $this->yuque_wordpress . "_log", $willUpdate, array('trigger_at' => date('Y-m-d H:i:s', $this->triggerTime)));
+
+        }
 
         return !!$row;
 
@@ -194,7 +220,7 @@ class Yuque_Wordpress_Public
 
         } // 捕获异常
         catch (Exception $e) {
-            $this->saveLog('解析xml发生错误', json_encode($e));
+            $this->saveLog('解析xml发生错误', array('log_detail' => json_encode($e)));
 
         } finally {
 //            return $yuque_wp_xml;
@@ -262,13 +288,13 @@ class Yuque_Wordpress_Public
 
         ]);
         $this->saveLog($post_id2 ? "本地化成功 " : '本地化失败');
-        return  true;
+        return true;
     }
 
     public function createOrUpdateWpPost($doc_data, $xml_obj_data = null)
     {
         $author = $this->config['author'];
-        $isLocalImage =$this->config['localImage'];
+        $isLocalImage = $this->config['localImage'];
         $isParseXml = $this->config['parseXml'];
         $post_status = 'publish';//文章状态
         $post_tag = array(); // 文章标签
@@ -282,6 +308,7 @@ class Yuque_Wordpress_Public
         }
 
         if (!is_null($xml_obj_data) && $isParseXml) {
+            $this->saveLog('解析xml');
             if ($xml_obj_data->category) {
                 if (is_object($xml_obj_data->category)) {
                     $temp_Array = $this->object_array($xml_obj_data->category);
@@ -356,7 +383,7 @@ class Yuque_Wordpress_Public
                 ]);
                 $this->saveLog('从语雀新建文章成功,' . $post_id . ":" . $doc_data['title']);
 
-                if ($isLocalImage){
+                if ($isLocalImage) {
                     $this->updatePostForLocalImage($post_id, $doc_data['body_html']);
                 }
             } else {
@@ -378,8 +405,8 @@ class Yuque_Wordpress_Public
                 'post_author' => $author,
                 'tags_input' => $post_tag,
             ]);
-            $this->saveLog($post_id ? "从语雀更新文章成功," . $post_id . ":" . $doc_data['title'] : '从语雀更新文章失败');
-            if ($post_id && $isLocalImage){
+            $this->saveLog($post_id ? "从语雀更新文章成功" . ":" . $doc_data['title'] : '从语雀更新文章失败');
+            if ($post_id && $isLocalImage) {
                 $this->updatePostForLocalImage($post_id, $doc_data['body_html']);
             }
 
@@ -396,29 +423,37 @@ class Yuque_Wordpress_Public
     {
 
 
-        $this->config = Yuque_Wordpress_Utils::getConfigData($this->yuque_wordpress."_config");
+        $this->config = Yuque_Wordpress_Utils::getConfigData($this->yuque_wordpress . "_config");
         if (!$this->config || !$this->config['switch']) wp_die('插件未开启');
-
+        $this->triggerTime = time();
         $request = new Yuque_Wordpress_Request($this->yuque_wordpress, $this->version, $this->config['accessToken']);
         $raw_data = $request->get_raw_data();
-        $this->saveLog('接收到数据', $raw_data);
+        $this->saveLog('', array('title'=> date('Y-m-d H:i:s', $this->triggerTime).' 同步日志'), 'create');
+        $this->saveLog('接收到语雀推送', array('webhook_data_json' => $raw_data) );
 
         if (!$this->verifyPluginToken($_GET['token'])) {
-            return $this->saveLog('插件 token 验证失败');
+            return $this->saveLog('插件token验证失败');
         };
 
         $resData = json_decode($raw_data);
-        $user_data = $request->getUserInfo();
-        if ($user_data) {
-            $namespace = $user_data['login'] . '/' . $resData->data->book->slug;
-            $doc_data = $request->getDocDetail($namespace, $resData->data->slug);
-            if ($doc_data) {
-                $this->saveLog('获取文章信息成功');
-                $parse_data = $this->parseXmlInHtml($doc_data['body_html']);
-                $doc_data['body_html'] = $parse_data['new_html']; // 使用经过解析处理的html
-                $this->createOrUpdateWpPost($doc_data, $parse_data['yuque_wp_xml']);
+        $userRes = $request->getUserInfo();
+        $userData = $userRes['data'];
+        if ($userRes['status']) {
+            $this->saveLog('获取用户信息成功', array('user_data_json' => json_encode($userData)));
+            $namespace = $userData['login'] . '/' . $resData->data->book->slug;
+            $docRes = $request->getDocDetail($namespace, $resData->data->slug);
+            $docData = $docRes['data'];
+            if ($docRes['status']) {
+                $this->saveLog('获取文章信息成功', array('doc_data_json' => json_encode($docData)));
+                $parse_data = $this->parseXmlInHtml($docData['body_html']);
+                $docData['body_html'] = $parse_data['new_html']; // 使用经过解析处理的html
+                $this->createOrUpdateWpPost($docData, $parse_data['yuque_wp_xml']);
 
+            }else{
+                $this->saveLog('获取文章信息失败', array('doc_data_json' => json_encode($docData)));
             }
+        }else{
+            $this->saveLog('获取用户信息失败', array('user_data_json' => json_encode($userData)));
         }
     }
 

@@ -51,7 +51,7 @@ class Yuque_Wordpress_Activator
 		id bigint(9) NOT NULL AUTO_INCREMENT,
 		post_id bigint(20) NOT NULL,
 		yuque_post_id bigint(20) NOT NULL,
-		yuque_post_url varchar(20),
+		yuque_post_url varchar(150),
 		create_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		update_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		PRIMARY KEY  (id)
@@ -71,8 +71,13 @@ class Yuque_Wordpress_Activator
         $tableName = $wpdb->prefix . YUQUE_WORDPRESS_PLUGIN_IDENTIFICATION . '_log';
         $sql = "CREATE TABLE IF NOT EXISTS " . $tableName . " (
 		id bigint(9) NOT NULL AUTO_INCREMENT,
+		title varchar(100),
+		step varchar(100),
 		log_detail varchar(200),
-		yuque_json longtext,
+		webhook_data_json longtext,
+		user_data_json longtext,
+		doc_data_json longtext,
+	    trigger_at timestamp NOT NULL,
 		create_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		PRIMARY KEY  (id)
 		)";
