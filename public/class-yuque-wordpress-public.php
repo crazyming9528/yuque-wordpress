@@ -46,6 +46,8 @@ class Yuque_Wordpress_Public
 
     private $postTitle;
     private $triggerTime;
+    private $request;
+    private $category;
 
     /**
      * Initialize the class and set its properties.
@@ -121,9 +123,10 @@ class Yuque_Wordpress_Public
     public function generateYuqueTips($content): string
     {
         $is_yuque = strpos($content, 'data-yuque_wordpress_plugin-version');
+//        $is_yuque = strpos($content,'lake-content');
         if ($is_yuque) {
             $img = plugin_dir_url(dirname(__FILE__)) . 'assets/yq_logo_50x50.svg';
-            $content .= '<div style="text-align: center;background-color: #f6ffe9cf;padding: 2px"><img style="vertical-align: middle" src="' . $img . '" alt=""><span style="vertical-align: middle;font-size: 13px;margin-left: 8px;color: grey">本文通过  <a href="https://github.com/crazyming9528/yuque-wordpress" rel="nofollow" target="_blank">YUQUE WORDPRESS</a> 同步自语雀云端知识库</span></div>';
+            $content .= '<div style="text-align: center;background-color: #f6ffe9cf;margin-top:15px;padding: 2px"><img style="vertical-align: middle" width="36px" src="' . $img . '" alt=""><span style="vertical-align: middle;font-size: 12px;margin-left: 8px;color: grey">本文通过  <a href="https://github.com/crazyming9528/yuque-wordpress" rel="nofollow" target="_blank">YUQUE WORDPRESS</a> 同步自语雀</span></div>';
         }
         return $content;
     }
@@ -184,6 +187,28 @@ class Yuque_Wordpress_Public
 
     }
 
+    private function insertMark(string $htmlStr = ''){
+        $new_html = '';
+        try {
+            $html_doc = new DOMDocument();
+            $html_doc->loadHTML(mb_convert_encoding($htmlStr, 'HTML-ENTITIES', 'UTF-8'));
+            $html_doc->normalizeDocument();
+            $node = $html_doc->createElement("div");
+            $new_node = $html_doc->appendChild($node);
+            $new_node->setAttribute("data-" . $this->yuque_wordpress . '-version', $this->version);//  添加标记
+            $new_html = $html_doc->saveHTML();
+
+        } // 捕获异常
+        catch (Exception $e) {
+            $this->saveLog('解析xml发生错误', array('log_detail' => json_encode($e)));
+        } finally {
+            return array(
+                'new_html' => $new_html,
+            );
+        }
+
+    }
+
 
     private function parseXmlInHtml(string $htmlStr = '')
     {
@@ -236,7 +261,7 @@ class Yuque_Wordpress_Public
     /**
      * @return string
      */
-    public function localImage($post_id, $content): string
+    public function localImage($content): string
     {
         $preg = preg_match_all('/<img.*?src="(.*?)"/', stripslashes($content), $matches);
         if ($preg) {
@@ -245,27 +270,28 @@ class Yuque_Wordpress_Public
                 if (empty($image_url)) continue;
                 $pos = strpos($image_url, get_bloginfo('url'));
                 if ($pos === false) {
-                    $file = file_get_contents($image_url);
+//                    $file = file_get_contents($image_url);
+                    $file = $this->request->getImage($image_url);
                     $filename = basename($image_url);
-                    $res = wp_upload_bits($filename, '', $file);
-                    $dirs = wp_upload_dir();
-                    $filetype = wp_check_filetype($filename);
-                    $attachment = array(
-                        'guid' => $dirs['baseurl'] . '/' . $filename,
-                        'post_mime_type' => $filetype['type'],
-                        'post_title' => preg_replace('/\.[^.]+$/', '', $filename),
-                        'post_content' => '',
-                        'post_status' => 'inherit'
-                    );
-                    $attach_id = wp_insert_attachment($attachment, $file, $post_id);
-                    $attach_data = wp_generate_attachment_metadata($attach_id, $file);
-                    //wp_generate_attachment_metadata
-                    wp_update_attachment_metadata($attach_id, $attach_data);
-                    //if($i==1 ){
-                    //set_post_thumbnail( $post_id, $attach_id );
-                    //}
+                        $res = wp_upload_bits($filename, '', $file);
+//                    $dirs = wp_upload_dir();
+//                    $filetype = wp_check_filetype($filename);
+//                    $attachment = array(
+//                        'guid' => $dirs['baseurl'] . '/' . $filename,
+//                        'post_mime_type' => $filetype['type'],
+//                        'post_title' => preg_replace('/\.[^.]+$/', '', $filename),
+//                        'post_content' => '',
+//                        'post_status' => 'inherit'
+//                    );
+//                    $attach_id = wp_insert_attachment($attachment, $file, $post_id);
+//                    $attach_data = wp_generate_attachment_metadata($attach_id, $file);
+//                    wp_update_attachment_metadata($attach_id, $attach_data);
+//
                     $replace = $res['url'];
+//                    $this->saveLog('replace:'.$replace);
+//                    $this->saveLog('image_url:'.$image_url);
                     $content = str_replace($image_url, $replace, $content);
+//                    $this->saveLog('$content:'.$image_url);
                 }
                 $i++;
             }
@@ -282,7 +308,7 @@ class Yuque_Wordpress_Public
         $post_id2 = wp_update_post([
             'ID' => $post_id,
             //
-            'post_content' => $this->localImage($post_id, $content),
+            'post_content' => $this->localImage($content),
             //正文html
 //            'post_content_filtered' => $doc_data['body'], todo 这里同样需要处理图片
 
@@ -299,6 +325,15 @@ class Yuque_Wordpress_Public
         $post_status = 'publish';//文章状态
         $post_tag = array(); // 文章标签
         $post_category = array();//文章分类
+        if ($this->category){
+            $cat = get_term_by('name', $this->category, 'category');
+            if ($cat) {
+                array_push($post_category, $cat->term_id);
+            } else {
+                $this->saveLog('设置分类 ' . $this->category . ' 失败');
+            }
+        }
+
         if ($doc_data['public'] === 0) {
             // 语雀私密文档
             $post_status = 'private';
@@ -307,51 +342,51 @@ class Yuque_Wordpress_Public
             $post_status = $doc_data['status'] === 1 ? 'publish' : 'draft';
         }
 
-        if (!is_null($xml_obj_data) && $isParseXml) {
-            $this->saveLog('解析xml');
-            if ($xml_obj_data->category) {
-                if (is_object($xml_obj_data->category)) {
-                    $temp_Array = $this->object_array($xml_obj_data->category);
-                    $error_array = array();
-                    //					$post_tag = array_merge($post_tag,$xml_obj_data->tag);
-                    foreach ($temp_Array as $key => $value) {
-
-                        // get_cat_ID 要被废弃, 这里参考 get_cat_ID 函数
-                        $cat = get_term_by('name', $value, 'category');
-                        if ($cat) {
-                            array_push($post_category, $cat->term_id);
-                        } else {
-                            array_push($error_array, $value);
-                        }
-
-                    }
-                    if (!empty($error_array)) {
-                        $this->saveLog('设置分类 ' . implode($error_array, '、') . ' 失败');
-                    }
-                } else {
-                    // get_cat_ID 要被废弃, 这里参考 get_cat_ID 函数
-                    $cat = get_term_by('name', $xml_obj_data->category, 'category');
-                    if ($cat) {
-                        array_push($post_category, $cat->term_id);
-                    } else {
-                        $this->saveLog('设置分类 ' . $xml_obj_data->category . ' 失败');
-                    }
-                }
-
-            }
-            if ($xml_obj_data->tag) {
-                if (is_object($xml_obj_data->tag)) {
-                    $temp = $this->object_array($xml_obj_data->tag);
-                    $post_tag = $temp;
-                } else {
-                    array_push($post_tag, $xml_obj_data->tag);
-
-                }
-
-            }
-
-
-        }
+//        if (!is_null($xml_obj_data) && $isParseXml) {
+//            $this->saveLog('解析xml');
+//            if ($xml_obj_data->category) {
+//                if (is_object($xml_obj_data->category)) {
+//                    $temp_Array = $this->object_array($xml_obj_data->category);
+//                    $error_array = array();
+//                    //					$post_tag = array_merge($post_tag,$xml_obj_data->tag);
+//                    foreach ($temp_Array as $key => $value) {
+//
+//                        // get_cat_ID 要被废弃, 这里参考 get_cat_ID 函数
+//                        $cat = get_term_by('name', $value, 'category');
+//                        if ($cat) {
+//                            array_push($post_category, $cat->term_id);
+//                        } else {
+//                            array_push($error_array, $value);
+//                        }
+//
+//                    }
+//                    if (!empty($error_array)) {
+//                        $this->saveLog('设置分类 ' . implode($error_array, '、') . ' 失败');
+//                    }
+//                } else {
+//                    // get_cat_ID 要被废弃, 这里参考 get_cat_ID 函数
+//                    $cat = get_term_by('name', $xml_obj_data->category, 'category');
+//                    if ($cat) {
+//                        array_push($post_category, $cat->term_id);
+//                    } else {
+//                        $this->saveLog('设置分类 ' . $xml_obj_data->category . ' 失败');
+//                    }
+//                }
+//
+//            }
+//            if ($xml_obj_data->tag) {
+//                if (is_object($xml_obj_data->tag)) {
+//                    $temp = $this->object_array($xml_obj_data->tag);
+//                    $post_tag = $temp;
+//                } else {
+//                    array_push($post_tag, $xml_obj_data->tag);
+//
+//                }
+//
+//            }
+//
+//
+//        }
 
 
         global $wpdb;
@@ -364,7 +399,7 @@ class Yuque_Wordpress_Public
                     //			'post_content'=> $raw_data['data']['title'],
                     'post_content' => $doc_data['body_html'],
                     //正文html
-                    'post_content_filtered' => $doc_data['body'],
+//                    'post_content_filtered' => $doc_data['body'],// 暂时屏蔽  图片本地化处理了这个字段后在打开
                     // 正文 markdown
                     'post_title' => $doc_data['title'],
                     'post_status' => $post_status,
@@ -421,12 +456,10 @@ class Yuque_Wordpress_Public
      */
     public function pull_posts()
     {
-
-
         $this->config = Yuque_Wordpress_Utils::getConfigData($this->yuque_wordpress . "_config");
         if (!$this->config || !$this->config['switch']) wp_die('插件未开启');
         $this->triggerTime = time();
-        $request = new Yuque_Wordpress_Request($this->yuque_wordpress, $this->version, $this->config['accessToken']);
+        $this->request = $request = new Yuque_Wordpress_Request($this->yuque_wordpress, $this->version, $this->config['accessToken']);
         $raw_data = $request->get_raw_data();
         $this->saveLog('', array('title'=> date('Y-m-d H:i:s', $this->triggerTime).' 同步日志'), 'create');
         $this->saveLog('接收到语雀推送', array('webhook_data_json' => $raw_data) );
@@ -434,6 +467,7 @@ class Yuque_Wordpress_Public
         if (!$this->verifyPluginToken($_GET['token'])) {
             return $this->saveLog('插件token验证失败');
         };
+        $this->category = $_GET['category'];
 
         $resData = json_decode($raw_data);
         $userRes = $request->getUserInfo();
@@ -445,9 +479,13 @@ class Yuque_Wordpress_Public
             $docData = $docRes['data'];
             if ($docRes['status']) {
                 $this->saveLog('获取文章信息成功', array('doc_data_json' => json_encode($docData)));
-                $parse_data = $this->parseXmlInHtml($docData['body_html']);
-                $docData['body_html'] = $parse_data['new_html']; // 使用经过解析处理的html
-                $this->createOrUpdateWpPost($docData, $parse_data['yuque_wp_xml']);
+                // 取消了解析xml的功能
+//                $parse_data = $this->parseXmlInHtml($docData['body_html']);
+//                $docData['body_html'] = $parse_data['new_html']; // 使用经过解析处理的html
+//                $this->createOrUpdateWpPost($docData, $parse_data['yuque_wp_xml']);
+                $parse_data = $this->insertMark($docData['body_html']);// 插入插件的标记
+                $docData['body_html'] = $parse_data['new_html']; //
+                $this->createOrUpdateWpPost($docData, null);
 
             }else{
                 $this->saveLog('获取文章信息失败', array('doc_data_json' => json_encode($docData)));
