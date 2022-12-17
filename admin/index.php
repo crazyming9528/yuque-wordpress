@@ -75,17 +75,17 @@
                     </div>
                 </div>
 
-                <div class="form-item">
-                    <div class="label">是否解析xml</div>
-                    <div class="content">
-                        <el-switch
-                                v-model="form.parseXml"
-                                active-color="#13ce66"
-                                inactive-color="#838383">
-                        </el-switch>
-                        <span class="tips">解析xml设置关键词、描述、分类、标签等信息</span>
-                    </div>
-                </div>
+<!--                <div class="form-item">-->
+<!--                    <div class="label">是否解析xml</div>-->
+<!--                    <div class="content">-->
+<!--                        <el-switch-->
+<!--                                v-model="form.parseXml"-->
+<!--                                active-color="#13ce66"-->
+<!--                                inactive-color="#838383">-->
+<!--                        </el-switch>-->
+<!--                        <span class="tips">解析xml设置关键词、描述、分类、标签等信息</span>-->
+<!--                    </div>-->
+<!--                </div>-->
 
 
                 <div class="form-item">
