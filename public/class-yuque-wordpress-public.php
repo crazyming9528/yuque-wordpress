@@ -122,12 +122,15 @@ class Yuque_Wordpress_Public
      */
     public function generateYuqueTips($content): string
     {
-        $is_yuque = strpos($content, 'data-yuque_wordpress_plugin-version');
-//        $is_yuque = strpos($content,'lake-content');
-        if ($is_yuque) {
+        global $wpdb;
+        global $post;
+        $sql = "select count(*) from " . $wpdb->prefix . $this->yuque_wordpress . "_post_map where post_id = " . $post->ID;
+        $sqlRes = $wpdb->get_var($sql);
+        if ($sqlRes != 0) {
             $img = plugin_dir_url(dirname(__FILE__)) . 'assets/yq_logo_50x50.svg';
-            $content .= '<div style="text-align: center;background-color: #f6ffe9cf;margin-top:15px;padding: 2px"><img style="vertical-align: middle" width="36px" src="' . $img . '" alt=""><span style="vertical-align: middle;font-size: 12px;margin-left: 8px;color: grey">本文通过  <a href="https://github.com/crazyming9528/yuque-wordpress" rel="nofollow" target="_blank">YUQUE WORDPRESS</a> 同步自语雀</span></div>';
+            $content .= '<div style="text-align: center;background-color: #f6ffe9cf;margin-top:15px;margin-bottom:15px;padding: 2px"><img style="vertical-align: middle" width="36px" src="' . $img . '" alt=""><span style="vertical-align: middle;font-size: 12px;margin-left: 8px;color: grey">本文通过  <a href="https://github.com/crazyming9528/yuque-wordpress" rel="nofollow" target="_blank">YUQUE WORDPRESS</a> 同步自语雀</span></div>';
         }
+
         return $content;
     }
 
@@ -187,6 +190,11 @@ class Yuque_Wordpress_Public
 
     }
 
+    /**
+     * 在文档中插入标记 (弃用 会导致部分内容丢失)
+     * @param string $htmlStr
+     * @return string[]
+     */
     private function insertMark(string $htmlStr = ''){
         $new_html = '';
         try {
@@ -483,8 +491,11 @@ class Yuque_Wordpress_Public
 //                $parse_data = $this->parseXmlInHtml($docData['body_html']);
 //                $docData['body_html'] = $parse_data['new_html']; // 使用经过解析处理的html
 //                $this->createOrUpdateWpPost($docData, $parse_data['yuque_wp_xml']);
-                $parse_data = $this->insertMark($docData['body_html']);// 插入插件的标记
-                $docData['body_html'] = $parse_data['new_html']; //
+
+
+
+//                $parse_data = $this->insertMark($docData['body_html']);// 插入插件的标记  弃用 会导致部分内容丢失
+//                $docData['body_html'] = $parse_data['new_html']; //
                 $this->createOrUpdateWpPost($docData, null);
 
             }else{

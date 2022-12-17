@@ -195,7 +195,7 @@ class Yuque_Wordpress
         $plugin_public = new Yuque_Wordpress_Public($this->get_yuque_wordpress(), $this->get_version());
         $this->loader->add_action('wp_enqueue_scripts', $plugin_public, 'enqueue_styles');
         $this->loader->add_action('wp_enqueue_scripts', $plugin_public, 'enqueue_scripts');
-        $this->loader->add_action('the_content', $plugin_public, 'generateYuqueTips');
+        $this->loader->add_filter('the_content', $plugin_public, 'generateYuqueTips');
 
         // 注册webhook回调请求地址 http://xxx.com/wp-admin/admin-ajax.php?action=yuque_wordpress_webhook
         $this->loader->add_action('wp_ajax_nopriv_yuque_wordpress_webhook', $plugin_public, 'pull_posts');
